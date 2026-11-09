@@ -1,19 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { sound } from './sound.js'
+import iitmLogo from './assets/iitm-logo.png'
 import './styles.css'
 
-// IIT MADRAS CAMPUS LOCKERS
+// IIT MADRAS CAMPUS LOCKERS (INCLUDING ADMIN BUILDING & THARAMANI GATE NORMAL + COLD UNITS)
 const LOCKERS = [
   { id: 'mandakini', name: 'Mandakini Hostel', short: 'Mandakini Unit', kind: 'regular', capacity: 20, location: 'North Campus · Ground Floor' },
   { id: 'ganga', name: 'Ganga Hostel', short: 'Ganga Unit', kind: 'regular', capacity: 20, location: 'North Campus · Main Lobby' },
   { id: 'krishna', name: 'Krishna Hostel', short: 'Krishna Unit', kind: 'regular', capacity: 20, location: 'South Campus · Entrance Portico' },
-  { id: 'tharamani', name: 'Tharamani Gate', short: 'Tharamani Cold Unit', kind: 'cold', capacity: 12, location: 'Security Gate · 4°C Regulated' },
+  { id: 'admin-regular', name: 'Admin Building (Standard)', short: 'Admin Normal Unit', kind: 'regular', capacity: 16, location: 'Central Campus · Admin Foyer' },
+  { id: 'admin-cold', name: 'Admin Building (Cold Storage)', short: 'Admin Cryo Unit', kind: 'cold', capacity: 12, location: 'Central Campus · 4°C Cryo Bay' },
+  { id: 'tharamani-regular', name: 'Tharamani Gate (Standard)', short: 'Tharamani Normal Unit', kind: 'regular', capacity: 16, location: 'Security Gate · Main Kiosk' },
+  { id: 'tharamani', name: 'Tharamani Gate (Cold Storage)', short: 'Tharamani Cold Unit', kind: 'cold', capacity: 12, location: 'Security Gate · 4°C Regulated' },
 ]
 
 // INITIAL DEMO DATA
 const seedParcels = [
-  ...Array.from({ length: 6 }, (_, i) => ({
+  ...Array.from({ length: 5 }, (_, i) => ({
     id: `AMZN-M${101 + i}`,
     lockerId: 'mandakini',
     compartment: i + 1,
@@ -25,7 +29,7 @@ const seedParcels = [
     type: 'regular',
     charge: 18,
   })),
-  ...Array.from({ length: 8 }, (_, i) => ({
+  ...Array.from({ length: 6 }, (_, i) => ({
     id: `BLU-G${201 + i}`,
     lockerId: 'ganga',
     compartment: i + 1,
@@ -49,6 +53,42 @@ const seedParcels = [
     type: 'regular',
     charge: 18,
   })),
+  ...Array.from({ length: 4 }, (_, i) => ({
+    id: `ADM-REG-${501 + i}`,
+    lockerId: 'admin-regular',
+    compartment: i + 1,
+    phone: `984005670${i}`,
+    student: i === 0 ? 'Prof. Sundararajan' : `Admin Staff Member #${i + 1}`,
+    status: 'stored',
+    createdAt: 'Today, 09:40 AM',
+    otp: `${150000 + i}`,
+    type: 'regular',
+    charge: 18,
+  })),
+  ...Array.from({ length: 3 }, (_, i) => ({
+    id: `ADM-COLD-${601 + i}`,
+    lockerId: 'admin-cold',
+    compartment: i + 1,
+    phone: `984006780${i}`,
+    student: i === 0 ? 'Dr. Meenakshi' : `Research Fellow #${i + 1}`,
+    status: 'stored',
+    createdAt: 'Today, 08:50 AM',
+    otp: `${140000 + i}`,
+    type: 'cold',
+    charge: 45,
+  })),
+  ...Array.from({ length: 3 }, (_, i) => ({
+    id: `THA-REG-${701 + i}`,
+    lockerId: 'tharamani-regular',
+    compartment: i + 1,
+    phone: `984007890${i}`,
+    student: i === 0 ? 'Vikram R.' : `Campus Resident #${i + 1}`,
+    status: 'stored',
+    createdAt: 'Today, 10:10 AM',
+    otp: `${130000 + i}`,
+    type: 'regular',
+    charge: 18,
+  })),
   ...Array.from({ length: 3 }, (_, i) => ({
     id: `SWG-FRZ-${401 + i}`,
     lockerId: 'tharamani',
@@ -69,6 +109,8 @@ const initialData = {
     { name: 'Ananya Subramaniam', phone: '9840012300', hostel: 'Mandakini Hostel' },
     { name: 'Rohan Verma', phone: '9840023400', hostel: 'Ganga Hostel' },
     { name: 'Kavya Nair', phone: '9840034500', hostel: 'Krishna Hostel' },
+    { name: 'Prof. Sundararajan', phone: '9840056700', hostel: 'Admin Building' },
+    { name: 'Dr. Meenakshi', phone: '9840067800', hostel: 'Admin Building' },
     { name: 'Aditya Iyer', phone: '9840045600', hostel: 'Tharamani Gate' },
   ],
   prices: { regular: 18, cold: 45 },
@@ -76,7 +118,7 @@ const initialData = {
 
 const loadData = () => {
   try {
-    const raw = localStorage.getItem('vault-app-data')
+    const raw = localStorage.getItem('vault-app-data-v3')
     return raw ? JSON.parse(raw) : initialData
   } catch {
     return initialData
@@ -85,7 +127,7 @@ const loadData = () => {
 
 const loadSession = () => {
   try {
-    const raw = localStorage.getItem('vault-app-session')
+    const raw = localStorage.getItem('vault-app-session-v3')
     return raw ? JSON.parse(raw) : initialData.students[0]
   } catch {
     return initialData.students[0]
@@ -169,7 +211,7 @@ function LockerCabinet({ locker, parcels, openCompartment, onSelectCompartment, 
           <span>{locker.name}</span>
         </div>
         <span className={`cabinet-status-tag ${locker.kind === 'cold' ? 'cold' : ''}`}>
-          {locker.kind === 'cold' ? '4°C Refrigerated' : `${free} bays available`}
+          {locker.kind === 'cold' ? '❄️ 4°C Cold Storage' : `${free} bays available`}
         </span>
       </div>
 
@@ -186,7 +228,7 @@ function LockerCabinet({ locker, parcels, openCompartment, onSelectCompartment, 
               key={num}
               className="locker-cell"
               onClick={() => interactive && toggleDoor(num)}
-              title={`Chamber #${num} (${isOccupied ? 'Occupied' : 'Free'})`}
+              title={`Chamber #${num} (${isOccupied ? 'Occupied by ' + parcel.id : 'Available'})`}
             >
               {/* Cavity behind the door */}
               <div className="locker-cavity">
@@ -223,18 +265,18 @@ function App() {
   const [data, setData] = useState(loadData)
   const [page, setPage] = useState('home')
   const [studentSession, setStudentSession] = useState(loadSession)
-  const [deliveryLocker, setDeliveryLocker] = useState('mandakini')
+  const [deliveryLocker, setDeliveryLocker] = useState('admin-regular')
   const [unlockingBay, setUnlockingBay] = useState(null)
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
-    localStorage.setItem('vault-app-data', JSON.stringify(data))
+    localStorage.setItem('vault-app-data-v3', JSON.stringify(data))
   }, [data])
 
   useEffect(() => {
     if (studentSession) {
-      localStorage.setItem('vault-app-session', JSON.stringify(studentSession))
+      localStorage.setItem('vault-app-session-v3', JSON.stringify(studentSession))
     }
   }, [studentSession])
 
@@ -314,7 +356,7 @@ function App() {
     sound.playSolenoid()
     sound.playSuccess()
     setData(prev => ({ ...prev, parcels: [newParcel, ...prev.parcels] }))
-    notify(`Parcel secured in Bay #${assigned}. OTP issued.`)
+    notify(`Parcel secured in ${locker.short} Bay #${assigned}. OTP issued.`)
     return { parcel: newParcel }
   }
 
@@ -346,13 +388,11 @@ function App() {
 
   return (
     <div className="app-shell">
-      {/* NAVBAR */}
+      {/* NAVBAR WITH OFFICIAL IIT MADRAS LOGO */}
       <header className="navbar">
         <div className="navbar-left">
           <div className="brand-badge" onClick={() => setPage('home')}>
-            <div className="brand-logo-icon">
-              <Icon name="box" size={18} />
-            </div>
+            <img src={iitmLogo} alt="IIT Madras Official Emblem" className="brand-logo-img" />
             <div className="brand-text-wrap">
               <span className="brand-name">VAULT</span>
               <span className="brand-tag">IIT Madras</span>
@@ -393,7 +433,7 @@ function App() {
         </div>
       </header>
 
-      {/* PAGE CONTAINER */}
+      {/* MAIN CONTENT CONTAINER */}
       <main className="main-content">
         {page === 'home' && (
           <OverviewPage
@@ -450,6 +490,10 @@ function App() {
             collected={collectedCount}
             available={freeCount}
             notify={notify}
+            onSelectStation={(lid) => {
+              setDeliveryLocker(lid)
+              setPage('delivery')
+            }}
           />
         )}
       </main>
@@ -469,18 +513,23 @@ function App() {
 // PAGE 01: OVERVIEW
 // --------------------------------------------------------------------------
 function OverviewPage({ data, stored, available, totalSlots, goto }) {
-  const primaryLocker = LOCKERS[0]
+  const primaryLocker = LOCKERS.find(l => l.id === 'admin-regular') || LOCKERS[0]
 
   return (
     <div>
       {/* HERO SECTION */}
       <section className="overview-hero">
         <div className="hero-text">
+          <div className="hero-iitm-badge">
+            <img src={iitmLogo} alt="IIT Madras Emblem" />
+            <span>Indian Institute of Technology Madras</span>
+          </div>
+
           <h1>
             Smart, secure parcel pickup across <span>IIT Madras</span>.
           </h1>
           <p>
-            Contactless smart lockers at Mandakini, Ganga, Krishna hostels and Tharamani Gate. Couriers drop off packages securely, and students collect them 24/7 with a 6-digit PIN.
+            Autonomous smart lockers across the Administration Building, Mandakini, Ganga, Krishna hostels and Tharamani Gate. Couriers drop off packages securely into standard and 4°C cold-storage bays, and recipients collect 24/7 with a 6-digit PIN.
           </p>
 
           <div className="hero-actions">
@@ -517,7 +566,7 @@ function OverviewPage({ data, stored, available, totalSlots, goto }) {
             <Icon name="grid" size={18} />
           </div>
           <div className="metric-number">{available} / {totalSlots}</div>
-          <div className="metric-sub">Free compartments ready for delivery</div>
+          <div className="metric-sub">Standard & Cold Storage bays ready</div>
         </div>
 
         <div className="metric-card">
@@ -525,8 +574,10 @@ function OverviewPage({ data, stored, available, totalSlots, goto }) {
             <span className="metric-label">Cold Storage (4°C)</span>
             <Icon name="snowflake" size={18} />
           </div>
-          <div className="metric-number">{LOCKERS[3].capacity - occupancy(LOCKERS[3], data.parcels)} free</div>
-          <div className="metric-sub">Tharamani Gate security kiosk</div>
+          <div className="metric-number">
+            {LOCKERS.filter(l => l.kind === 'cold').reduce((acc, l) => acc + (l.capacity - occupancy(l, data.parcels)), 0)} free
+          </div>
+          <div className="metric-sub">Admin Building & Tharamani Gate</div>
         </div>
       </div>
 
@@ -537,13 +588,13 @@ function OverviewPage({ data, stored, available, totalSlots, goto }) {
           <div className="step-card">
             <div className="step-num">01</div>
             <h3>Courier Drop-Off</h3>
-            <p>The delivery agent scans the package, confirms the student's mobile number, and places it into an automatically opened compartment.</p>
+            <p>The delivery agent scans the package, confirms the recipient mobile number, and places it into an automatically opened standard or cold-storage bay.</p>
           </div>
 
           <div className="step-card">
             <div className="step-num">02</div>
             <h3>Instant 6-Digit PIN</h3>
-            <p>The system generates a unique 6-digit collection OTP visible on the student's personal dashboard.</p>
+            <p>The system generates a unique 6-digit collection OTP visible on the student or staff member's personal dashboard.</p>
           </div>
 
           <div className="step-card">
@@ -561,7 +612,7 @@ function OverviewPage({ data, stored, available, totalSlots, goto }) {
 // PAGE 02: STUDENT DESK
 // --------------------------------------------------------------------------
 function StudentDeskPage({ data, session, onRegister, goto }) {
-  const [form, setForm] = useState(session || { name: '', phone: '', hostel: 'Mandakini Hostel' })
+  const [form, setForm] = useState(session || { name: '', phone: '', hostel: 'Admin Building' })
 
   const pickDemoStudent = (st) => {
     sound.playKey('1')
@@ -577,30 +628,30 @@ function StudentDeskPage({ data, session, onRegister, goto }) {
     <div>
       <div className="page-title-row">
         <div>
-          <span className="page-eyebrow">Student Portal</span>
-          <h1 className="page-heading">Your Campus Deliveries</h1>
+          <span className="page-eyebrow">Campus Recipient Portal</span>
+          <h1 className="page-heading">Your Deliveries & OTP Codes</h1>
           <p className="page-subtext">
-            View packages waiting for collection and grab your 6-digit OTP code.
+            View packages waiting for collection at your hostel or the Administration Building.
           </p>
         </div>
       </div>
 
       <div className="student-grid">
-        {/* STUDENT PROFILE CARD */}
+        {/* STUDENT / STAFF PROFILE CARD */}
         <div className="student-profile-card">
           <div className="profile-avatar-row">
-            <div className="avatar-initials">
-              {session?.name ? session.name[0] : 'S'}
+            <div className="avatar-initials" style={{ padding: 0, overflow: 'hidden' }}>
+              <img src={iitmLogo} alt="IIT Madras" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div>
-              <div className="profile-name">{session?.name || 'Student'}</div>
+              <div className="profile-name">{session?.name || 'Campus Recipient'}</div>
               <div className="profile-hostel">{session?.hostel} · {session?.phone}</div>
             </div>
           </div>
 
           <div className="persona-picker">
             <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-              Switch Demo Student:
+              Switch Demo Recipient:
             </span>
             {data.students.map(st => (
               <button
@@ -608,7 +659,7 @@ function StudentDeskPage({ data, session, onRegister, goto }) {
                 className={`persona-pill ${session?.phone === st.phone ? 'active' : ''}`}
                 onClick={() => pickDemoStudent(st)}
               >
-                {st.name} ({st.hostel.split(' ')[0]})
+                {st.name} ({st.hostel})
               </button>
             ))}
           </div>
@@ -638,14 +689,16 @@ function StudentDeskPage({ data, session, onRegister, goto }) {
               />
             </div>
             <div className="field-group">
-              <label>Hostel</label>
+              <label>Primary Campus Location</label>
               <select
                 value={form.hostel}
                 onChange={e => setForm({ ...form, hostel: e.target.value })}
               >
-                {LOCKERS.map(l => (
-                  <option key={l.id} value={l.name}>{l.name}</option>
-                ))}
+                <option value="Admin Building">Admin Building (Central Campus)</option>
+                <option value="Mandakini Hostel">Mandakini Hostel</option>
+                <option value="Ganga Hostel">Ganga Hostel</option>
+                <option value="Krishna Hostel">Krishna Hostel</option>
+                <option value="Tharamani Gate">Tharamani Gate</option>
               </select>
             </div>
             <button type="submit" className="btn btn-secondary" style={{ width: '100%', marginTop: 8 }}>
@@ -677,7 +730,7 @@ function StudentDeskPage({ data, session, onRegister, goto }) {
                       <span>{locker.name} · Bay <b>#{String(p.compartment).padStart(2, '0')}</b></span>
                     </div>
                     <div className="parcel-time-badge">
-                      Deposited {p.createdAt} · {p.type === 'cold' ? '❄️ 4°C Refrigerated' : 'Standard Parcel'}
+                      Deposited {p.createdAt} · {p.type === 'cold' ? '❄️ 4°C Cold Storage' : 'Standard Ambient Bay'}
                     </div>
                   </div>
 
@@ -776,10 +829,10 @@ function DeliveryPage({ data, selectedLocker, onSelectLocker, onDeposit, goto })
     <div>
       <div className="page-title-row">
         <div>
-          <span className="page-eyebrow">Courier Portal</span>
+          <span className="page-eyebrow">Courier Inbound</span>
           <h1 className="page-heading">Deposit a Delivery</h1>
           <p className="page-subtext">
-            Enter parcel tracking and student phone number to assign a free compartment.
+            Choose standard ambient or 4°C cold-storage compartments at the Admin Building, hostels, or campus gates.
           </p>
         </div>
       </div>
@@ -828,7 +881,7 @@ function DeliveryPage({ data, selectedLocker, onSelectLocker, onDeposit, goto })
                 <input
                   value={phone}
                   onChange={e => { setPhone(e.target.value); setResult(null) }}
-                  placeholder="e.g. 9840012300"
+                  placeholder="e.g. 9840056700"
                   required
                 />
                 {phone && (
@@ -837,7 +890,7 @@ function DeliveryPage({ data, selectedLocker, onSelectLocker, onDeposit, goto })
                     <span>
                       {matchedStudent
                         ? `Recipient: ${matchedStudent.name} (${matchedStudent.hostel})`
-                        : 'Unregistered number (student must sign up first)'}
+                        : 'Unregistered number (recipient must register first)'}
                     </span>
                   </div>
                 )}
@@ -853,27 +906,34 @@ function DeliveryPage({ data, selectedLocker, onSelectLocker, onDeposit, goto })
                 />
 
                 <div className="demo-chips">
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', alignSelf: 'center' }}>Demo presets:</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)', alignSelf: 'center' }}>Presets:</span>
+                  <button
+                    type="button"
+                    className="demo-chip-btn"
+                    onClick={() => handleDemoPreset(`DOCS-${Math.floor(1000 + Math.random() * 9000)}`, '9840056700', 'admin-regular')}
+                  >
+                    Admin Docs (Prof. Sundararajan)
+                  </button>
+                  <button
+                    type="button"
+                    className="demo-chip-btn"
+                    onClick={() => handleDemoPreset(`LAB-CRYO-${Math.floor(1000 + Math.random() * 9000)}`, '9840067800', 'admin-cold')}
+                  >
+                    ❄️ Admin Cold (Dr. Meenakshi)
+                  </button>
                   <button
                     type="button"
                     className="demo-chip-btn"
                     onClick={() => handleDemoPreset(`AMZN-${Math.floor(1000 + Math.random() * 9000)}`, '9840012300', 'mandakini')}
                   >
-                    Amazon (Ananya)
-                  </button>
-                  <button
-                    type="button"
-                    className="demo-chip-btn"
-                    onClick={() => handleDemoPreset(`BLU-${Math.floor(1000 + Math.random() * 9000)}`, '9840023400', 'ganga')}
-                  >
-                    BlueDart (Rohan)
+                    Amazon (Ananya - Mandakini)
                   </button>
                   <button
                     type="button"
                     className="demo-chip-btn"
                     onClick={() => handleDemoPreset(`SWG-${Math.floor(1000 + Math.random() * 9000)}`, '9840045600', 'tharamani')}
                   >
-                    Swiggy Cold 4°C (Aditya)
+                    ❄️ Swiggy Cold (Tharamani)
                   </button>
                 </div>
               </div>
@@ -889,7 +949,7 @@ function DeliveryPage({ data, selectedLocker, onSelectLocker, onDeposit, goto })
                 >
                   {LOCKERS.map(l => (
                     <option key={l.id} value={l.id}>
-                      {l.name} {l.kind === 'cold' ? '(4°C Cold Storage)' : ''}
+                      {l.name} {l.kind === 'cold' ? '— ❄️ 4°C Cold Storage' : '— Standard'}
                     </option>
                   ))}
                 </select>
@@ -1057,7 +1117,7 @@ function CollectPage({ data, onCollect, unlockedBay }) {
               CLICK ACTIVE DEMO PINS:
             </span>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-              {storedParcels.slice(0, 5).map(p => (
+              {storedParcels.slice(0, 6).map(p => (
                 <button
                   key={p.id}
                   className="demo-chip-btn"
@@ -1066,7 +1126,7 @@ function CollectPage({ data, onCollect, unlockedBay }) {
                     verifyPin(p.otp)
                   }}
                 >
-                  {lockerById(p.lockerId).short.split(' ')[0]} #{p.compartment} → <b>{p.otp}</b>
+                  {lockerById(p.lockerId).short.replace('Unit', '')} #{p.compartment} → <b>{p.otp}</b>
                 </button>
               ))}
             </div>
@@ -1127,20 +1187,41 @@ function CollectPage({ data, onCollect, unlockedBay }) {
 // PAGE 05: LOCKERS NETWORK
 // --------------------------------------------------------------------------
 function AvailabilityPage({ parcels, onSelectStation }) {
+  const [filter, setFilter] = useState('all')
+
+  const filtered = filter === 'cold'
+    ? LOCKERS.filter(l => l.kind === 'cold')
+    : filter === 'regular'
+      ? LOCKERS.filter(l => l.kind === 'regular')
+      : LOCKERS
+
   return (
     <div>
       <div className="page-title-row">
         <div>
-          <span className="page-eyebrow">Campus Hardware</span>
+          <span className="page-eyebrow">Campus Hardware Network</span>
           <h1 className="page-heading">Locker Stations</h1>
           <p className="page-subtext">
-            Live availability status across North Campus, South Campus, and Tharamani Gate.
+            Live availability status across the Admin Building, North Campus, South Campus, and Tharamani Gate.
           </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: 6 }}>
+          {['all', 'regular', 'cold'].map(t => (
+            <button
+              key={t}
+              className={`btn btn-secondary ${filter === t ? 'btn-primary' : ''}`}
+              style={{ padding: '6px 12px', fontSize: 12, textTransform: 'capitalize' }}
+              onClick={() => setFilter(t)}
+            >
+              {t === 'all' ? 'All Stations' : t === 'regular' ? 'Normal Lockers' : '❄️ Cold Storage'}
+            </button>
+          ))}
         </div>
       </div>
 
       <div className="network-cards-grid">
-        {LOCKERS.map(l => {
+        {filtered.map(l => {
           const used = occupancy(l, parcels)
           const free = l.capacity - used
           const pct = Math.round((used / l.capacity) * 100)
@@ -1154,7 +1235,7 @@ function AvailabilityPage({ parcels, onSelectStation }) {
                     <p>{l.location}</p>
                   </div>
                   <span className={`cabinet-status-tag ${l.kind === 'cold' ? 'cold' : ''}`}>
-                    {l.kind === 'cold' ? '❄️ 4°C Cryo' : 'Standard'}
+                    {l.kind === 'cold' ? '❄️ 4°C Cold Storage' : 'Standard'}
                   </span>
                 </div>
 
@@ -1189,9 +1270,10 @@ function AvailabilityPage({ parcels, onSelectStation }) {
 // --------------------------------------------------------------------------
 // PAGE 06: ADMIN CONSOLE
 // --------------------------------------------------------------------------
-function AdminPage({ data, setData, stored, collected, available, notify }) {
+function AdminPage({ data, setData, stored, collected, available, notify, onSelectStation }) {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
+  const [locationFilter, setLocationFilter] = useState('all')
   const [prices, setPrices] = useState(data.prices)
 
   const handlePriceSave = (e) => {
@@ -1245,7 +1327,7 @@ function AdminPage({ data, setData, stored, collected, available, notify }) {
   const handleResetData = () => {
     if (confirm('Reset to initial seed data?')) {
       setData(initialData)
-      localStorage.removeItem('vault-app-data')
+      localStorage.removeItem('vault-app-data-v3')
       notify('Reset to default seeds.')
     }
   }
@@ -1259,6 +1341,12 @@ function AdminPage({ data, setData, stored, collected, available, notify }) {
     return matchesFilter && matchesSearch
   })
 
+  const filteredLockers = locationFilter === 'cold'
+    ? LOCKERS.filter(l => l.kind === 'cold')
+    : locationFilter === 'regular'
+      ? LOCKERS.filter(l => l.kind === 'regular')
+      : LOCKERS
+
   return (
     <div>
       <div className="page-title-row">
@@ -1266,7 +1354,7 @@ function AdminPage({ data, setData, stored, collected, available, notify }) {
           <span className="page-eyebrow">Administration</span>
           <h1 className="page-heading">Operations Console</h1>
           <p className="page-subtext">
-            Parcel manifest, courier tariffs, and data management.
+            Campus locker units status, live parcel register, and courier tariffs.
           </p>
         </div>
 
@@ -1375,6 +1463,71 @@ function AdminPage({ data, setData, stored, collected, available, notify }) {
               Reset to Factory Seeds
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* LOCKER UNITS BY LOCATION SECTION (ADMIN PANEL LOCATION STATUS) */}
+      <div className="admin-locations-section">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 14 }}>
+          <div>
+            <span className="page-eyebrow">Campus Hardware Locations</span>
+            <h2 style={{ fontSize: 18, fontWeight: 700 }}>Locker Units & Storage Capacity</h2>
+            <p style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+              Real-time monitoring across standard ambient lockers and 4°C cold-storage units.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {['all', 'regular', 'cold'].map(t => (
+              <button
+                key={t}
+                className={`btn btn-secondary ${locationFilter === t ? 'btn-primary' : ''}`}
+                style={{ padding: '4px 10px', fontSize: 12, textTransform: 'capitalize' }}
+                onClick={() => setLocationFilter(t)}
+              >
+                {t === 'all' ? 'All Units' : t === 'regular' ? 'Normal Lockers' : '❄️ Cold Storage'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="admin-locations-grid">
+          {filteredLockers.map(l => {
+            const used = occupancy(l, data.parcels)
+            const free = l.capacity - used
+            const pct = Math.round((used / l.capacity) * 100)
+            const isCold = l.kind === 'cold'
+
+            return (
+              <div key={l.id} className={`admin-location-card ${isCold ? 'cold' : 'regular'}`}>
+                <div className="admin-card-header">
+                  <div>
+                    <div className="admin-card-title">{l.name}</div>
+                    <div className="admin-card-loc">{l.location}</div>
+                  </div>
+                  <span className={`admin-badge-type ${isCold ? 'cold' : 'regular'}`}>
+                    {isCold ? '❄️ 4°C Cold' : 'Normal'}
+                  </span>
+                </div>
+
+                <div className="capacity-progress-bar" style={{ margin: '12px 0 8px' }}>
+                  <div
+                    className={`capacity-progress-fill ${isCold ? 'cold' : ''}`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--text-muted)' }}>
+                  <span>{used} / {l.capacity} occupied</span>
+                  <b style={{ color: 'var(--green)' }}>{free} available</b>
+                </div>
+
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border-default)', display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--text-muted)' }}>
+                  <span>Chamber: <b>{isCold ? '4.0°C Regulated' : 'Ambient (24°C)'}</b></span>
+                  <span>Fee: <b>₹{data.prices[isCold ? 'cold' : 'regular']}</b></span>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
